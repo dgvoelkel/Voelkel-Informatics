@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Player Search</title>
+    <!-- jQuery and jQuery UI for autocomplete -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+
+        /* Loading animation overlay */
+        #loading {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            background: rgba(255, 255, 255, 0.8);
+            z-index: 9999;
+            text-align: center;
+        }
+        .spinner {
+            margin: 15% auto;
+            width: 100px;
+            height: 100px;
+            animation: spin 1.5s linear infinite;
+        }
+        .spinner img {
+            width: 100px;
+            height: 100px;
+            object-fit: contain;
+        }
+        @keyframes spin {
+            0%   { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Form styling */
+        h1 {
+            margin-bottom: 16px;
+        }
+        p.description {
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+        form {
+            max-width: 400px;
+            margin: 0 auto; /* center the form */
+            display: flex;
+            flex-direction: column; /* stack elements vertically */
+            gap: 15px; /* spacing between form elements */
+        }
+        label {
+            font-weight: bold;
+        }
+        #player,
+        #season_dropdown {
+            padding: 8px;
+            font-size: 1rem;
+        }
+        input[type="submit"] {
+            padding: 10px;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        /* Button to return home */
+        .btn-home {
+            padding: 10px 15px;
+            font-size: 1rem;
+            margin-bottom: 20px;
+            cursor: pointer;
+        }
+
+        /* Error message styling */
+        #error-message {
+            color: red;
+            font-weight: bold;
+            display: none;
+            margin: 0 auto;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        /* BOUNCING BALL (5 bounces) */
+        .bouncing-ball-container {
+            position: fixed;
+            bottom: 20px; 
+            left: 0;     
+            z-index: 9999;
+            animation: bounceAcross 6s linear infinite; 
+        }
+        .bouncing-ball-container img {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+        }
+        @keyframes bounceAcross {
+            0% {
+                transform: translateX(-80px) translateY(0);
+            }
+            10% {
+                transform: translateX(10vw) translateY(-100px);
+            }
+            20% {
+                transform: translateX(20vw) translateY(0);
+            }
+            30% {
+                transform: translateX(30vw) translateY(-100px);
+            }
+            40% {
+                transform: translateX(40vw) translateY(0);
+            }
+            50% {
+                transform: translateX(50vw) translateY(-100px);
+            }
+            60% {
+                transform: translateX(60vw) translateY(0);
+            }
+            70% {
+                transform: translateX(70vw) translateY(-100px);
+            }
+            80% {
+                transform: translateX(80vw) translateY(0);
+            }
+            90% {
+                transform: translateX(90vw) translateY(-100px);
+            }
+            100% {
+                transform: translateX(110vw) translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Animation (hidden by default) -->
+    <div id="loading" style="display: none;">
+        <div class="spinner">
+            <img src="https://img.icons8.com/color/96/basketball.png" alt="Spinning Basketball">
+        </div>
+    </div>
+
+    <!-- New Title & Description -->
+    <h1>Welcome to the Shooting Score!</h1>
+    <p class="description">
+        The Shooting Score is a composite z-score made from 8 shooting metrics with
+        the intention of quantifying skill. A score over 0 is above average, over 1
+        is great, over 2 is elite, and over 3 is G.O.A.T level.
+    </p>
+
+    <!-- Button to return home -->
+    <button class="btn-home" onclick="window.location.href='/'">
+        Return Home
+    </button>
+
+    <!-- Display errors -->
+    <div id="error-message"></div>
+
+    <!-- Search form -->
+    <form action="/result" method="post" id="player-form">
+        <label for="player">Player Name:</label>
+        <input type="text" id="player" name="player" autocomplete="off">
+
+        <div id="season-container" style="display:none;">
+            <label for="season_dropdown">Season:</label>
+            <select id="season_dropdown" name="season_dropdown"></select>
+        </div>
+
+        <input type="submit" value="Submit">
+    </form>
+
+    <!-- Bouncing Basketball -->
+    <div class="bouncing-ball-container">
+        <img src="https://img.icons8.com/color/96/basketball.png" alt="Bouncing Basketball">
+    </div>
+
+    <script>
+        let validPlayerSelected = false;
+
+        $(function() {
+            $("#player").autocomplete({
+                source: function(request, response) {
+                    $.ajax({
+                        url: "/search",
+                        dataType: "json",
+                        data: { q: request.term },
+                        success: function(data) {
+                            response(data);
+                        }
+                    });
+                },
+                minLength: 2,
+                select: function(event, ui) {
+                    validPlayerSelected = true;
+                    $("#error-message").hide();
+                    loadSeasons(ui.item.value);
+                }
+            });
+
+            $("#player").on("input", function() {
+                validPlayerSelected = false;
+            });
+        });
+
+        function loadSeasons(playerName) {
+            $("#season_dropdown").empty();
+
+            $.ajax({
+                url: "/seasons",
+                dataType: "json",
+                data: { player_name: playerName },
+                success: function(seasons) {
+                    if (seasons.length > 0) {
+                        $("#season-container").show();
+                        seasons.forEach(function(season) {
+                            $("#season_dropdown").append(
+                                $("<option></option>").attr("value", season).text(season)
+                            );
+                        });
+                    } else {
+                        $("#season-container").hide();
+                    }
+                }
+            });
+        }
+
+        // Hide loading spinner on page load
+        window.onload = function() {
+            document.getElementById('loading').style.display = 'none';
+        };
+
+        // Show loading spinner when form is valid and about to be submitted
+        document.getElementById('player-form').addEventListener('submit', function(e) {
+            const playerInput = document.getElementById('player').value.trim();
+            if (!playerInput || !validPlayerSelected) {
+                e.preventDefault();
+                $("#error-message").text("Please select a valid player from the suggestions.")
+                                   .show();
+                return;
+            }
+            document.getElementById('loading').style.display = 'block';
+        });
+    </script>
+</body>
+</html>
