@@ -31,7 +31,9 @@ def _cache_is_fresh(cache_file: str, stats_path: str) -> bool:
     if not csv_files:
         return False
     newest_csv = max(os.path.getmtime(f) for f in csv_files)
-    return os.path.getmtime(cache_file) >= newest_csv
+    # Allow 5-minute skew: on Render, git checkout writes files sequentially so
+    # CSVs can have a slightly newer mtime than the cache even in the same deploy.
+    return os.path.getmtime(cache_file) >= newest_csv - 300
 
 
 def _get_game_predictor() -> NBAPointsPredictor:
