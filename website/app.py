@@ -1,5 +1,4 @@
 import os
-import sys
 import glob
 import threading
 import joblib
@@ -7,11 +6,6 @@ import pandas as pd
 
 from flask import Flask, render_template, request, jsonify, redirect, url_for
 from flask_caching import Cache
-
-# ── Path setup: import sibling project modules ──────────────────────────────
-_BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, os.path.join(_BASE, "Shooting Score"))
-sys.path.insert(0, os.path.join(_BASE, "NBA_Scoring_Model_Regression"))
 
 import basic_stat_grab
 import zcalc
@@ -22,10 +16,9 @@ from nba_points_predictor import NBAPointsPredictor, NBASeasonPredictor
 app = Flask(__name__, template_folder="templates", static_folder="static")
 cache = Cache(app, config={"CACHE_TYPE": "SimpleCache", "CACHE_DEFAULT_TIMEOUT": 3600})
 
-_CACHE_DIR = os.path.join(os.path.dirname(__file__), "cache")
-NBA_STATS_PATH = os.path.join(
-    _BASE, "NBA_Scoring_Model_Regression", "nba_player_gamelogs_by_season"
-)
+_HERE = os.path.dirname(os.path.abspath(__file__))
+_CACHE_DIR = os.path.join(_HERE, "cache")
+NBA_STATS_PATH = os.path.join(_HERE, "nba_player_gamelogs_by_season")
 
 # ── In-memory singletons ─────────────────────────────────────────────────────
 _game_predictor = None
