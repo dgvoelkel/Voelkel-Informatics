@@ -1,9 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(where pip *)",
-      "Bash(pip list *)",
-      "Bash(python -c ' *)"
-    ]
-  }
-}
