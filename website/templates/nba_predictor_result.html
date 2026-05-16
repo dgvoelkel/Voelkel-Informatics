@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}{{ player_name }} — NBA Predictor{% endblock %}
+
+{% block content %}
+
+<div class="mt-32">
+    <div style="font-size:7px; color:#666; letter-spacing:3px; margin-bottom:8px;">
+        RESULT // MODEL 0{{ "1" if model == "game" else "2" }}
+    </div>
+
+    {% if model == "game" %}
+    <!-- ── GAME-LEVEL RESULT ── -->
+    <div class="scoreboard">
+
+        <div class="scoreboard-header">GAME PREDICTION</div>
+
+        <div style="font-size:8px; color:#ffe000; text-align:center; margin-bottom:4px;">
+            {{ player_name | upper }}
+        </div>
+        <div style="font-size:7px; color:#555; text-align:center; margin-bottom:20px; letter-spacing:1px;">
+            {{ game_date }}
+        </div>
+
+        <!-- Main score display -->
+        <div class="score-main">{{ result.rounded_prediction }}</div>
+        <div class="score-label">PREDICTED POINTS (ROUNDED)</div>
+
+        <div class="stat-row">
+            <span class="stat-key">RAW PREDICTION</span>
+            <span class="stat-value">{{ "%.2f"|format(result.raw_prediction) }} PTS</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-key">BETTING LINE</span>
+            <span class="stat-value">{{ result.rounded_prediction }} PTS</span>
+        </div>
+
+        <!-- Visual O/U hint -->
+        <div style="margin-top:24px; text-align:center;">
+            {% set rnd = result.rounded_prediction %}
+            <div style="font-size:8px; color:#888; letter-spacing:2px; margin-bottom:8px;">
+                BETTING LINE REFERENCE
+            </div>
+            <div style="display:flex; gap:16px; justify-content:center;">
+                <div style="font-size:9px; color:#00ff88; border:2px solid #00ff88; padding:8px 14px;">
+                    OVER {{ rnd }}
+                </div>
+                <div style="font-size:9px; color:#ff3333; border:2px solid #ff3333; padding:8px 14px;">
+                    UNDER {{ rnd }}
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    {% else %}
+    <!-- ── SEASON-LEVEL RESULT ── -->
+    <div class="scoreboard">
+
+        <div class="scoreboard-header">SEASON PROJECTION</div>
+
+        <div style="font-size:8px; color:#ffe000; text-align:center; margin-bottom:20px;">
+            {{ player_name | upper }}
+        </div>
+
+        <!-- Big projected PPG -->
+        <div class="score-main">{{ "%.1f"|format(result.predicted_next_season_ppg) }}</div>
+        <div class="score-label">PROJECTED NEXT SEASON PPG</div>
+
+        <div class="stat-row">
+            <span class="stat-key">CURRENT SEASON</span>
+            <span class="stat-value">{{ result.SEASON_START }}-{{ result.SEASON_START + 1 }}</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-key">CURRENT PPG</span>
+            <span class="stat-value">{{ "%.1f"|format(result.current_season_ppg) }}</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-key">PREDICTED NEXT</span>
+            <span class="stat-value">{{ "%.2f"|format(result.predicted_next_season_ppg) }}</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-key">GAMES PLAYED</span>
+            <span class="stat-value">{{ result.games_played_current_season }}</span>
+        </div>
+
+        <!-- Delta arrow -->
+        {% set delta = result.predicted_next_season_ppg - result.current_season_ppg %}
+        <div style="margin-top:24px; text-align:center;">
+            {% if delta > 0 %}
+                <div style="font-size:14px; color:#00ff88;">▲ +{{ "%.2f"|format(delta) }} PPG</div>
+                <div style="font-size:7px; color:#00ff88; margin-top:4px; letter-spacing:1px;">TRENDING UP</div>
+            {% elif delta < 0 %}
+                <div style="font-size:14px; color:#ff3333;">▼ {{ "%.2f"|format(delta) }} PPG</div>
+                <div style="font-size:7px; color:#ff3333; margin-top:4px; letter-spacing:1px;">TRENDING DOWN</div>
+            {% else %}
+                <div style="font-size:14px; color:#888;">= NO CHANGE</div>
+            {% endif %}
+        </div>
+
+    </div>
+    {% endif %}
+
+    <!-- Action buttons -->
+    <div class="flex gap-16 flex-wrap mt-32">
+        <a class="btn btn-yellow" href="/nba-predictor">&gt; PREDICT AGAIN</a>
+        <a class="btn btn-ghost" href="/">&lt; HOME</a>
+    </div>
+
+</div>
+
+{% endblock %}

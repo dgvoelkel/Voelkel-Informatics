@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+{% block title %}NBA Points Predictor — Voelkel Informatics{% endblock %}
+
+{% block head %}
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+{% endblock %}
+
+{% block content %}
+
+<div class="mt-32">
+    <div style="font-size:8px; color:#ff6600; letter-spacing:3px; margin-bottom:8px;">MODEL 02</div>
+    <h1 style="font-size:16px; color:#ffe000; text-shadow:3px 3px 0 #7a6800; margin-bottom:8px; line-height:1.6;">
+        NBA POINTS<br>PREDICTOR
+    </h1>
+    <p style="font-size:8px; color:#666; line-height:2.4; max-width:480px; margin-bottom:32px;">
+        LASSO REGRESSION TRAINED ON 20+ SEASONS.<br>
+        SELECT A MODE THEN ENTER A PLAYER.
+    </p>
+
+    <a class="btn btn-ghost" href="/" style="font-size:7px; margin-bottom:40px; display:inline-block;">
+        &lt; RETURN HOME
+    </a>
+
+    <!-- Mode select -->
+    <div style="font-size:8px; color:#888; letter-spacing:3px; margin-bottom:16px;">SELECT MODE</div>
+
+    <div class="model-toggle">
+        <button class="model-btn active" id="btn-model1" onclick="selectModel('1')">
+            MODEL 1<br>
+            <span style="color:#666; font-size:7px;">GAME-LEVEL<br>PREDICT PTS<br>FOR ONE GAME</span>
+        </button>
+        <button class="model-btn" id="btn-model2" onclick="selectModel('2')">
+            MODEL 2<br>
+            <span style="color:#666; font-size:7px;">SEASON-LEVEL<br>PREDICT NEXT<br>SEASON PPG</span>
+        </button>
+    </div>
+
+    <div id="error-msg" class="hidden" style="color:#ff3333; font-size:8px; margin-bottom:16px; line-height:2;"></div>
+
+    <form id="nba-form" action="/nba-predictor/result" method="post">
+        <input type="hidden" name="model_choice" id="model_choice" value="1">
+
+        <!-- Player name autocomplete -->
+        <div class="form-group">
+            <label class="form-label" for="player_name">PLAYER NAME</label>
+            <input class="form-input" type="text" id="player_name" name="player_name"
+                   placeholder="e.g. Victor Wembanyama" autocomplete="off">
+        </div>
+
+        <!-- Game picker (Model 1 only) -->
+        <div id="game-section" class="form-group">
+            <label class="form-label">GAME</label>
+
+            <!-- Dropdown populated after player selection -->
+            <div id="game-dropdown-wrap" style="display:none;">
+                <select class="form-select" id="game_select" style="max-width:400px;"></select>
+                <input type="hidden" name="game_date" id="game_date">
+            </div>
+
+            <!-- Manual date fallback shown before player selected or if no games found -->
+            <div id="date-fallback">
+                <input class="form-input" type="date" id="game_date_manual" style="max-width:400px;">
+                <div style="font-size:7px; color:#555; margin-top:6px; line-height:2;">
+                    SELECT A PLAYER ABOVE TO SEE UPCOMING GAMES,<br>OR ENTER A DATE MANUALLY.
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-yellow mt-8">&gt; PREDICT &lt;</button>
+    </form>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    var validPlayer = false;
+    var currentModel = "1";
+
+    function selectModel(choice) {
+        currentModel = choice;
+        document.getElementById("model_choice").value = choice;
+        document.getElementById("btn-model1").classList.toggle("active", choice === "1");
+        document.getElementById("btn-model2").classList.toggle("active", choice === "2");
+        document.getElementById("game-section").style.display = choice === "1" ? "flex" : "none";
+    }
+
+    $(function() {
+        $("#player_name").autocomplete({
+            source: function(request, response) {
+                $.ajax({
+                    url: "/nba-search",
+                    dataType: "json",
+                    data: { q: request.term },
+                    success: function(data) { response(data); }
+                });
+            },
+            minLength: 2,
+            select: function(event, ui) {
+                validPlayer = true;
+                $("#error-msg").addClass("hidden");
+                if (currentModel === "1") {
+                    loadPlayerGames(ui.item.value);
+                }
+            }
+        });
+
+        $("#player_name").on("input", function() {
+            validPlayer = false;
+            resetGamePicker();
+        });
+    });
+
+    function loadPlayerGames(playerName) {
+        $("#game-dropdown-wrap").hide();
+        $("#date-fallback").show();
+        $("#game_select").empty();
+        $("#game_date").val("");
+
+        $.ajax({
+            url: "/player-games",
+            dataType: "json",
+            data: { player_name: playerName },
+            success: function(data) {
+                if (data.error) {
+                    showHint("SCHEDULE ERROR: " + data.error + " — ENTER DATE MANUALLY.");
+                    return;
+                }
+                if (!Array.isArray(data) || data.length === 0) {
+                    showHint("NO UPCOMING GAMES FOUND — ENTER DATE MANUALLY.");
+                    return;
+                }
+                $.each(data, function(i, game) {
+                    $("#game_select").append($("<option>").val(game.date).text(game.label));
+                });
+                $("#game_select").on("change", function() {
+                    $("#game_date").val($(this).val());
+                });
+                $("#game_date").val(data[0].date);
+                $("#game-dropdown-wrap").show();
+                $("#date-fallback").hide();
+            },
+            error: function() {
+                showHint("COULD NOT LOAD SCHEDULE — ENTER DATE MANUALLY.");
+            }
+        });
+    }
+
+    function resetGamePicker() {
+        $("#game-dropdown-wrap").hide();
+        $("#date-fallback").show();
+        $("#game_select").empty();
+        $("#game_date").val("");
+    }
+
+    function showHint(msg) {
+        var el = document.getElementById("error-msg");
+        el.textContent = msg;
+        el.classList.remove("hidden");
+    }
+
+    document.getElementById("nba-form").addEventListener("submit", function(e) {
+        e.preventDefault();
+
+        var player = document.getElementById("player_name").value.trim();
+        if (!player) { showHint("ENTER A PLAYER NAME."); return; }
+
+        var data = {
+            model_choice: document.getElementById("model_choice").value,
+            player_name: player
+        };
+
+        if (data.model_choice === "1") {
+            var dropdownDate = document.getElementById("game_date").value;
+            var manualDate   = document.getElementById("game_date_manual").value;
+            var chosenDate   = dropdownDate || manualDate;
+            if (!chosenDate) { showHint("SELECT OR ENTER A GAME DATE."); return; }
+            data.game_date = chosenDate;
+        }
+
+        sessionStorage.setItem("nba_pending_form", JSON.stringify(data));
+        window.location.href = "/loading";
+    });
+</script>
+{% endblock %}

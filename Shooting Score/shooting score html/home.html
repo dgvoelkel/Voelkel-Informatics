@@ -30,71 +30,47 @@
         }
 
         /* BOUNCING BALL */
-        .bouncing-ball-container {
+        .ball-x {
             position: fixed;
-            bottom: 20px; /* How far from bottom you want the ball */
-            left: 0;      /* Start near the left edge */
-            z-index: 9999;
-            animation: bounceAcross 6s linear infinite; 
-            /* ^ total duration: 6s (tweak as needed),
-               infinite repetition so it keeps bouncing */
+            bottom: 20px;
+            left: -80px;
+            z-index: 0;
+            pointer-events: none;
+            animation: moveBallX 6s linear infinite;
         }
-        .bouncing-ball-container img {
-            width: 60px;  /* Adjust as desired */
-            height: 60px; /* Adjust as desired */
+        .ball-y {
+            animation: moveBallY 6s linear infinite;
+        }
+        .ball-x img {
+            width: 60px;
+            height: 60px;
             object-fit: contain;
+            display: block;
+            animation: spinBall 1s linear infinite;
         }
 
-        /* Keyframes for 5 bounces before leaving screen */
-        @keyframes bounceAcross {
-            0% {
-                /* slightly off left edge, on ground */
-                transform: translateX(-80px) translateY(0);
-            }
-            10% {
-                /* 1st apex */
-                transform: translateX(10vw) translateY(-100px);
-            }
-            20% {
-                /* back to ground */
-                transform: translateX(20vw) translateY(0);
-            }
+        @keyframes spinBall {
+            from { transform: rotate(0deg); }
+            to   { transform: rotate(360deg); }
+        }
 
-            30% {
-                /* 2nd apex */
-                transform: translateX(30vw) translateY(-100px);
-            }
-            40% {
-                /* back to ground */
-                transform: translateX(40vw) translateY(0);
-            }
+        @keyframes moveBallX {
+            from { left: -80px; }
+            to   { left: 110vw; }
+        }
 
-            50% {
-                /* 3rd apex */
-                transform: translateX(50vw) translateY(-100px);
-            }
-            60% {
-                /* back to ground */
-                transform: translateX(60vw) translateY(0);
-            }
-
-            70% {
-                /* 4th apex */
-                transform: translateX(70vw) translateY(-100px);
-            }
-            80% {
-                /* back to ground */
-                transform: translateX(80vw) translateY(0);
-            }
-
-            90% {
-                /* 5th apex */
-                transform: translateX(90vw) translateY(-100px);
-            }
-            100% {
-                /* off right edge, instantly resets to left at next iteration */
-                transform: translateX(110vw) translateY(0);
-            }
+        @keyframes moveBallY {
+            0%   { transform: translateY(0);      animation-timing-function: ease-out; }
+            10%  { transform: translateY(-150px); animation-timing-function: ease-in;  }
+            20%  { transform: translateY(0);      animation-timing-function: ease-out; }
+            30%  { transform: translateY(-150px); animation-timing-function: ease-in;  }
+            40%  { transform: translateY(0);      animation-timing-function: ease-out; }
+            50%  { transform: translateY(-150px); animation-timing-function: ease-in;  }
+            60%  { transform: translateY(0);      animation-timing-function: ease-out; }
+            70%  { transform: translateY(-150px); animation-timing-function: ease-in;  }
+            80%  { transform: translateY(0);      animation-timing-function: ease-out; }
+            90%  { transform: translateY(-150px); animation-timing-function: ease-in;  }
+            100% { transform: translateY(0); }
         }
     </style>
 </head>
@@ -115,9 +91,10 @@
     </div>
 
     <!-- Bouncing Basketball -->
-    <div class="bouncing-ball-container">
-        <!-- You can replace this with a local image if you prefer -->
-        <img src="https://img.icons8.com/color/96/basketball.png" alt="Bouncing Basketball">
+    <div class="ball-x">
+        <div class="ball-y">
+            <img src="https://img.icons8.com/color/96/basketball.png" alt="Bouncing Basketball">
+        </div>
     </div>
 </body>
 </html>

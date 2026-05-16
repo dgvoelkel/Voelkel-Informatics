@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}{{ player_name }} — Shooting Score{% endblock %}
+
+{% block content %}
+
+<div class="mt-32">
+    <div style="font-size:7px; color:#666; letter-spacing:3px; margin-bottom:8px;">RESULT // MODEL 01</div>
+
+    <div class="stats-card">
+
+        <div class="stats-card-header">P1 STATS CARD</div>
+        <div class="stats-card-player">{{ player_name | upper }}</div>
+
+        <!-- Big composite score -->
+        <div class="big-score">
+            {% if result["Composite Z-Score"] >= 0 %}+{% endif %}{{ "%.2f"|format(result["Composite Z-Score"]) }}
+        </div>
+        <div style="text-align:center; font-size:7px; color:#00ff88; margin-bottom:28px; letter-spacing:2px;">
+            COMPOSITE Z-SCORE
+        </div>
+
+        <!-- Stat rows -->
+        <div class="stat-row">
+            <span class="stat-key">SEASON</span>
+            <span class="stat-value">{{ result["Season"] }}</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-key">POSITION</span>
+            <span class="stat-value">{{ result["Position"] }}</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-key">PERCENTILE</span>
+            <span class="stat-value">{{ "%.1f"|format(result["Percentile"]) }}%</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-key">RANK</span>
+            <span class="stat-value">#{{ result["Rank"] }} / {{ result["Total Players"] }}</span>
+        </div>
+
+        <!-- Grade bar -->
+        <div style="margin-top:24px; font-size:7px; color:#555; letter-spacing:2px; margin-bottom:8px;">
+            RATING
+        </div>
+        {% set z = result["Composite Z-Score"] %}
+        {% if z >= 3 %}
+            <div style="font-size:11px; color:#ffe000; text-shadow:2px 2px 0 #7a6800;">G.O.A.T LEVEL ★★★★★</div>
+        {% elif z >= 2 %}
+            <div style="font-size:11px; color:#ff6600;">ELITE ★★★★</div>
+        {% elif z >= 1 %}
+            <div style="font-size:11px; color:#00ff88;">GREAT ★★★</div>
+        {% elif z >= 0 %}
+            <div style="font-size:11px; color:#aaaaaa;">ABOVE AVG ★★</div>
+        {% else %}
+            <div style="font-size:11px; color:#555555;">BELOW AVG ★</div>
+        {% endif %}
+
+    </div>
+
+    <!-- Action buttons -->
+    <div class="flex gap-16 flex-wrap mt-32">
+        <a class="btn btn-green" href="/shooting-score">&gt; SEARCH AGAIN</a>
+        <a class="btn btn-ghost" href="/">&lt; HOME</a>
+    </div>
+</div>
+
+{% endblock %}

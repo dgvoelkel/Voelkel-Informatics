@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% block title %}Shooting Score — Voelkel Informatics{% endblock %}
+
+{% block head %}
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+{% endblock %}
+
+{% block content %}
+
+    <!-- Loading spinner overlay -->
+    <div id="loading" style="display:none; position:fixed; inset:0; background:rgba(10,10,10,0.92);
+         z-index:5000; display:none; flex-direction:column; align-items:center; justify-content:center;">
+        <div style="font-size:48px; animation:spin 1s linear infinite;">🏀</div>
+        <div style="font-size:8px; color:#ff6600; margin-top:24px; letter-spacing:2px;">CALCULATING...</div>
+        <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+    </div>
+
+    <div class="mt-32">
+        <div style="font-size:8px; color:#ff6600; letter-spacing:3px; margin-bottom:8px;">MODEL 01</div>
+        <h1 style="font-size:18px; color:#00ff88; text-shadow:3px 3px 0 #006633; margin-bottom:8px; line-height:1.5;">
+            SHOOTING SCORE
+        </h1>
+        <p style="font-size:8px; color:#666; line-height:2.4; max-width:480px; margin-bottom:32px;">
+            COMPOSITE Z-SCORE FROM 8 SHOOTING METRICS.
+        </p>
+
+        <a class="btn btn-ghost" href="/" style="font-size:7px; margin-bottom:32px; display:inline-block;">
+            &lt; RETURN HOME
+        </a>
+
+        <div id="error-message" class="hidden" style="color:#ff3333; font-size:8px; margin-bottom:16px; line-height:2;"></div>
+
+        <form action="/shooting-score/result" method="post" id="player-form">
+
+            <div class="form-group">
+                <label class="form-label" for="player">PLAYER NAME</label>
+                <input class="form-input" type="text" id="player" name="player" autocomplete="off"
+                       placeholder="e.g. LeBron James">
+            </div>
+
+            <div class="form-group" id="season-container" style="display:none;">
+                <label class="form-label" for="season_dropdown">SEASON</label>
+                <select class="form-select" id="season_dropdown" name="season_dropdown"></select>
+            </div>
+
+            <button type="submit" class="btn btn-green mt-8">
+                &gt; RUN MODEL &lt;
+            </button>
+
+        </form>
+    </div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let validPlayerSelected = false;
+    let seasonsLoaded = false;
+
+    $(function() {
+        $("#player").autocomplete({
+            source: function(request, response) {
+                $.ajax({
+                    url: "/search",
+                    dataType: "json",
+                    data: { q: request.term },
+                    success: function(data) { response(data); }
+                });
+            },
+            minLength: 2,
+            select: function(event, ui) {
+                validPlayerSelected = true;
+                seasonsLoaded = false;
+                $("#error-message").addClass("hidden");
+                loadSeasons(ui.item.value);
+            }
+        });
+
+        $("#player").on("input", function() {
+            validPlayerSelected = false;
+            seasonsLoaded = false;
+            $("#season-container").hide();
+            $("#season_dropdown").empty();
+        });
+    });
+
+    function loadSeasons(playerName) {
+        $("#season_dropdown").empty();
+        $.ajax({
+            url: "/seasons",
+            dataType: "json",
+            data: { player_name: playerName },
+            success: function(seasons) {
+                if (Array.isArray(seasons) && seasons.length > 0) {
+                    seasonsLoaded = true;
+                    $("#season-container").show();
+                    seasons.forEach(function(s) {
+                        $("#season_dropdown").append($("<option>").val(s).text(s));
+                    });
+                } else {
+                    seasonsLoaded = false;
+                    $("#season-container").hide();
+                    showError("NO SEASONS FOUND FOR THIS PLAYER.");
+                }
+            },
+            error: function(xhr) {
+                var msg = "COULD NOT LOAD SEASONS.";
+                try { var j = JSON.parse(xhr.responseText); if (j.error) msg = j.error.toUpperCase(); } catch(e) {}
+                showError(msg);
+            }
+        });
+    }
+
+    function showError(msg) {
+        var el = document.getElementById("error-message");
+        el.textContent = "! " + msg;
+        el.classList.remove("hidden");
+    }
+
+    document.getElementById("player-form").addEventListener("submit", function(e) {
+        const playerInput = document.getElementById("player").value.trim();
+        if (!playerInput || !validPlayerSelected) {
+            e.preventDefault();
+            showError("PLEASE SELECT A VALID PLAYER FROM THE DROPDOWN.");
+            return;
+        }
+        if (!seasonsLoaded) {
+            e.preventDefault();
+            showError("PLEASE WAIT FOR SEASONS TO LOAD, THEN SELECT ONE.");
+            return;
+        }
+        document.getElementById("loading").style.display = "flex";
+    });
+</script>
+{% endblock %}

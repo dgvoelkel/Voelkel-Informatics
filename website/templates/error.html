@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Error — Voelkel Informatics{% endblock %}
+
+{% block content %}
+
+<div class="game-over mt-48">
+    <div class="game-over-title">GAME OVER</div>
+    <div class="game-over-msg">{{ message }}</div>
+    <a class="btn btn-orange" href="/">
+        &gt; TRY AGAIN &lt;
+    </a>
+</div>
+
+{% endblock %}

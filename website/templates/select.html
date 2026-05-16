@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Select Model — Voelkel Informatics{% endblock %}
+
+{% block content %}
+
+<div class="center mt-32">
+
+    <div style="font-size:8px; color:#888; letter-spacing:4px; margin-bottom:32px;">
+        ── FREE MODELS ──
+    </div>
+
+    <div class="card-grid">
+
+        <!-- Shooting Score card -->
+        <div class="arcade-card" onclick="window.location.href='/shooting-score'">
+            <div class="card-label">MODEL 01</div>
+            <div class="card-title">SHOOTING<br>SCORE</div>
+            <div class="card-desc">
+                SHOOTING METRIC<br>
+                BUILT ON COMPOSITE<br>
+                Z-SCORES.
+            </div>
+            <a class="btn btn-orange card-btn" href="/shooting-score">&gt; SELECT &lt;</a>
+        </div>
+
+        <!-- NBA Points Predictor card -->
+        <div class="arcade-card" onclick="window.location.href='/nba-predictor'">
+            <div class="card-label">MODEL 02</div>
+            <div class="card-title">NBA POINTS<br>PREDICTOR</div>
+            <div class="card-desc">
+                LASSO REGRESSION<br>
+                TRAINED ON 20+<br>
+                SEASONS OF DATA.<br>
+                GAME-LEVEL OR<br>
+                SEASON PPG<br>
+                PREDICTIONS.
+            </div>
+            <a class="btn btn-yellow card-btn" href="/nba-predictor">&gt; SELECT &lt;</a>
+        </div>
+
+    </div>
+
+    <div class="mt-48">
+        <a class="btn btn-ghost" href="/" style="font-size:7px;">&lt; TITLE SCREEN</a>
+    </div>
+
+</div>
+
+{% endblock %}

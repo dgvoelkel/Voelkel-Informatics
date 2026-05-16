@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Voelkel Informatics{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    {% block head %}{% endblock %}
+</head>
+<body>
+
+    <nav class="navbar">
+        <a class="navbar-brand" href="/">
+            🏀 <span>VOELKEL</span> INFORMATICS
+        </a>
+        <div class="navbar-links">
+            <a href="/">HOME</a>
+            <a href="/shooting-score">SHOOTING SCORE</a>
+            <a href="/nba-predictor">NBA PREDICTOR</a>
+        </div>
+    </nav>
+
+    <main class="content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        &copy; DGV &nbsp;|&nbsp; INSERT COIN TO CONTINUE
+    </footer>
+
+    <!-- Bouncing Basketball -->
+    <div class="ball-x">
+        <div class="ball-y">
+            <span class="ball-icon">🏀</span>
+        </div>
+    </div>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>
