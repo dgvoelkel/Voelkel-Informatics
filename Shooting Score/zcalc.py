@@ -31,7 +31,8 @@ def get_players_by_position_and_season(position, season_id):
                 season=season_id,
                 season_type_all_star='Regular Season',
                 per_mode_detailed='PerGame',
-                player_position_abbreviation_nullable=player_position_code
+                player_position_abbreviation_nullable=player_position_code,
+                timeout=30,
             ).get_data_frames()[0]
         else:
             player_stats = pd.DataFrame()
@@ -42,6 +43,7 @@ def get_players_by_position_and_season(position, season_id):
                 season=season_id,
                 season_type_all_star='Regular Season',
                 per_mode_detailed='PerGame',
+                timeout=30,
             ).get_data_frames()[0]
     except Exception as e:
         print(f"Error retrieving data for season {season_id}: {e}")

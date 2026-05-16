@@ -32,7 +32,7 @@ def get_player_id(player_name):
         raise ValueError(f"Player '{player_name}' not found.")
 
 def get_player_position(player_id):
-    player_info = commonplayerinfo.CommonPlayerInfo(player_id=player_id)
+    player_info = commonplayerinfo.CommonPlayerInfo(player_id=player_id, timeout=30)
     info = player_info.get_data_frames()[0]
     position = info['POSITION'].values[0]
     return position
@@ -42,7 +42,7 @@ def get_all_seasons_for_player(player_id):
     Returns a sorted list of all seasons in which the player has data.
     Example return: ['2015-16', '2016-17', '2017-18', '2018-19', '2019-20']
     """
-    career = playercareerstats.PlayerCareerStats(player_id=player_id)
+    career = playercareerstats.PlayerCareerStats(player_id=player_id, timeout=30)
     stats = career.get_data_frames()[0]
     stats = stats[stats['LEAGUE_ID'] == '00']  # Filter out playoff or G-League stats
     
@@ -63,12 +63,11 @@ def get_player_stats(player_id, season_id):
     """
     Retrieves the player's per-game stats for a specific season.
     """
-    career = playercareerstats.PlayerCareerStats(player_id=player_id, per_mode36='PerGame')
+    career = playercareerstats.PlayerCareerStats(player_id=player_id, per_mode36='PerGame', timeout=30)
     df = career.get_data_frames()[0]
     df = df[(df['LEAGUE_ID'] == '00') & (df['SEASON_ID'] == season_id)]
     if df.empty:
-        print(f"No data found for season {season_id}.")
-        sys.exit(1)
+        raise ValueError(f"No data found for season {season_id}.")
 
     # If multiple rows exist (rare for trades mid-season), pick the sum or last row
     # Here we pick the last row
@@ -96,7 +95,8 @@ def get_shot_zone_fg_percentages(player_id, season_id):
         player_id=player_id,
         season_type_all_star=SeasonType.regular,
         season_nullable=season_id,
-        context_measure_simple='FGA'
+        context_measure_simple='FGA',
+        timeout=30,
     )
     shot_data = shotchart.get_data_frames()[0]
     if shot_data.empty:
