@@ -249,6 +249,7 @@ class NBAPointsPredictor:
         schedule = scheduleleaguev2.ScheduleLeagueV2(
             league_id="00",
             season=season,
+            timeout=30,
         )
         games = schedule.get_data_frames()[0].copy()
         games["GAME_DATE"] = (
@@ -257,10 +258,13 @@ class NBAPointsPredictor:
             .dt.normalize()
         )
 
-        # gameStatus arrives as int or str depending on nba_api version; normalise both
+        # gameStatus: 1=scheduled, 2=in-progress, 3=final.
+        # During playoffs the API sometimes returns float 1.0 — use pd.to_numeric so
+        # "1", 1, and 1.0 all match correctly.
+        numeric_status = pd.to_numeric(games["gameStatus"], errors="coerce")
         future_games = games[
             (games["GAME_DATE"] >= today)
-            & (games["gameStatus"].astype(str).str.strip() == "1")
+            & (numeric_status == 1)
         ].copy()
 
         home_rows = future_games[
