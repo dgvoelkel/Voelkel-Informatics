@@ -1,5 +1,4 @@
 import os
-import glob
 import threading
 import joblib
 import pandas as pd
@@ -26,44 +25,46 @@ _season_predictor = None
 _warmup_error = None
 
 
-def _cache_is_fresh(cache_file: str, stats_path: str) -> bool:
-    csv_files = glob.glob(os.path.join(stats_path, "game_stats_*.csv"))
-    if not csv_files:
-        return False
-    newest_csv = max(os.path.getmtime(f) for f in csv_files)
-    # Allow 5-minute skew: on Render, git checkout writes files sequentially so
-    # CSVs can have a slightly newer mtime than the cache even in the same deploy.
-    return os.path.getmtime(cache_file) >= newest_csv - 300
-
-
 def _get_game_predictor() -> NBAPointsPredictor:
     global _game_predictor
     if _game_predictor is None:
-        os.makedirs(_CACHE_DIR, exist_ok=True)
         cache_file = os.path.join(_CACHE_DIR, "game_predictor.joblib")
-        if os.path.exists(cache_file) and _cache_is_fresh(cache_file, NBA_STATS_PATH):
-            _game_predictor = joblib.load(cache_file)
-        else:
+        if os.path.exists(cache_file):
+            try:
+                _game_predictor = joblib.load(cache_file)
+            except Exception:
+                pass
+        if _game_predictor is None:
             # auto_build_future_schedule=False avoids an NBA API call at startup
             # that can fail and crash the warmup thread. Schedule is built lazily
             # on first prediction request via get_player_game_on_date().
             _game_predictor = NBAPointsPredictor(
                 stats_path=NBA_STATS_PATH, auto_build_future_schedule=False
             )
-            joblib.dump(_game_predictor, cache_file, compress=3)
+            try:
+                os.makedirs(_CACHE_DIR, exist_ok=True)
+                joblib.dump(_game_predictor, cache_file, compress=3)
+            except Exception:
+                pass
     return _game_predictor
 
 
 def _get_season_predictor() -> NBASeasonPredictor:
     global _season_predictor
     if _season_predictor is None:
-        os.makedirs(_CACHE_DIR, exist_ok=True)
         cache_file = os.path.join(_CACHE_DIR, "season_predictor.joblib")
-        if os.path.exists(cache_file) and _cache_is_fresh(cache_file, NBA_STATS_PATH):
-            _season_predictor = joblib.load(cache_file)
-        else:
+        if os.path.exists(cache_file):
+            try:
+                _season_predictor = joblib.load(cache_file)
+            except Exception:
+                pass
+        if _season_predictor is None:
             _season_predictor = NBASeasonPredictor(stats_path=NBA_STATS_PATH)
-            joblib.dump(_season_predictor, cache_file, compress=3)
+            try:
+                os.makedirs(_CACHE_DIR, exist_ok=True)
+                joblib.dump(_season_predictor, cache_file, compress=3)
+            except Exception:
+                pass
     return _season_predictor
 
 
