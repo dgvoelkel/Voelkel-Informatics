@@ -249,7 +249,7 @@ class NBAPointsPredictor:
         schedule = scheduleleaguev2.ScheduleLeagueV2(
             league_id="00",
             season=season,
-            timeout=30,
+            timeout=60,
         )
         games = schedule.get_data_frames()[0].copy()
         games["GAME_DATE"] = (

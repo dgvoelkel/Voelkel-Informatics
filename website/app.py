@@ -75,6 +75,14 @@ def _warmup():
         _get_season_predictor()
     except Exception as e:
         _warmup_error = str(e)
+        return
+    # Pre-fetch future schedule in the background so /player-games never has to
+    # make a blocking NBA API call during a live request.
+    try:
+        if _game_predictor.future_games_df is None:
+            _game_predictor.future_games_df = _game_predictor.build_future_schedule_df()
+    except Exception:
+        pass  # non-fatal — /player-games returns [] and the user can enter a date manually
 
 
 # Start background warmup immediately on server start
@@ -220,9 +228,8 @@ def player_games():
 
         latest_team = str(player_df.iloc[-1]["TEAM_ABBREVIATION"])
 
-        # Build future schedule lazily (first call only)
         if predictor.future_games_df is None:
-            predictor.future_games_df = predictor.build_future_schedule_df()
+            return jsonify([])  # warmup still fetching schedule; user can enter date manually
 
         team_games = predictor.future_games_df[
             predictor.future_games_df["TEAM"].str.upper() == latest_team.upper()
